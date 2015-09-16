@@ -1,4 +1,4 @@
-package diary.cs4720.cs.virginia.edu.myapplication;
+package edu.virginia.cs.cs4720.diary.diary;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

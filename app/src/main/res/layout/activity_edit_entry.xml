@@ -4,7 +4,7 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
-    tools:context="diary.cs4720.cs.virginia.edu.myapplication.EditEntry"
+    tools:context="edu.virginia.cs.cs4720.diary.edu.EditEntry"
     android:id="@+id/linearlayout"
     android:weightSum="1">
 

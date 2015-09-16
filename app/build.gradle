@@ -5,7 +5,7 @@ android {
     buildToolsVersion "23.0.1"
 
     defaultConfig {
-        applicationId "diary.cs4720.cs.virginia.edu.myapplication"
+        applicationId "edu.virginia.cs.cs4720.diary.myapplication"
         minSdkVersion 15
         targetSdkVersion 23
         versionCode 1

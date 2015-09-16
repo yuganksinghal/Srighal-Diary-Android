@@ -1,4 +1,4 @@
-package diary.cs4720.cs.virginia.edu.myapplication;
+package edu.virginia.cs.cs4720.diary;
 
 import android.content.Context;
 import android.location.Location;
@@ -17,6 +17,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import edu.virginia.cs.cs4720.diary.myapplication.R;
 
 
 public class MainActivity extends AppCompatActivity implements LocationListener {

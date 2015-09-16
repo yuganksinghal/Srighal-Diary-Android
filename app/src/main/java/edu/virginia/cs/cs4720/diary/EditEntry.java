@@ -1,9 +1,11 @@
-package diary.cs4720.cs.virginia.edu.myapplication;
+package edu.virginia.cs.cs4720.diary;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+
+import edu.virginia.cs.cs4720.diary.myapplication.R;
 
 public class EditEntry extends AppCompatActivity {
 

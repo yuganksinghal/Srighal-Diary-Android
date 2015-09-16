@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="diary.cs4720.cs.virginia.edu.myapplication" >
+    package="edu.virginia.cs.cs4720.diary.myapplication" >
 
     <application
         android:allowBackup="true"
@@ -8,7 +8,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".MainActivity"
+            android:name="edu.virginia.cs.cs4720.diary.MainActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -17,7 +17,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".EditEntry"
+            android:name="edu.virginia.cs.cs4720.diary.EditEntry"
             android:label="@string/title_activity_edit_entry" >
         </activity>
     </application>
