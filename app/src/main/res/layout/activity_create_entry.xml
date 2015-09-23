@@ -11,7 +11,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:ems="10"
-        android:id="@+id/editText2"
+        android:id="@+id/titleText"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:editable="true"
@@ -30,11 +30,11 @@
         android:layout_marginTop="18dp"
         android:editable="true"
         android:hint="Entry"
-        android:layout_below="@+id/editText2"
+        android:layout_below="@+id/titleText"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_alignRight="@+id/editText2"
-        android:layout_alignEnd="@+id/editText2" />
+        android:layout_alignRight="@+id/titleText"
+        android:layout_alignEnd="@+id/titleText" />
 
     <Button
         android:layout_width="wrap_content"
@@ -44,5 +44,20 @@
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"
         android:onClick="onSave" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/Latitude"
+        android:layout_above="@+id/button2"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="64dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/Longitude"
+        android:layout_above="@+id/button2" />
 
 </RelativeLayout>

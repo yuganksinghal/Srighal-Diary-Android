@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -24,34 +25,47 @@ import java.util.ArrayList;
 import edu.virginia.cs.cs4720.diary.myapplication.R;
 
 
-public class MainActivity extends AppCompatActivity /*implements LocationListener*/ {
+public class MainActivity extends AppCompatActivity  {
 
-    public ArrayList<DiaryEntry> entryList = new ArrayList<DiaryEntry>();
+    public ArrayList<DiaryEntry> entryList;
     ArrayAdapter<DiaryEntry> adapter;
+
+    static final int GET_ENTRY = 1;
+    static final int EDIT_ENTRY = 2;
+
+    static final String ENTRY_LIST_KEY = "Entry list";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_main);
-        /*LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    public void requestPermissions(@NonNull String[] permissions, int requestCode)
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for Activity#requestPermissions for more details.
-            return;
+        if (savedInstanceState != null){
+            entryList = savedInstanceState.getParcelableArrayList(ENTRY_LIST_KEY);
         }
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
-        Log.d("MAIN ACTIVITY","past registration");*/
+        else{
+            entryList = new ArrayList<DiaryEntry>();
+        }
+
+        setContentView(R.layout.activity_main);
 
         ListView listView = (ListView)findViewById(R.id.listView);
         adapter = new ArrayAdapter<DiaryEntry>(this, android.R.layout.simple_list_item_1, entryList);
 
         listView.setAdapter(adapter);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                DiaryEntry entry = (DiaryEntry)parent.getItemAtPosition(position);
+                Intent intent = new Intent();
+                Bundle b = new Bundle();
+                b.putParcelable("existing_entry", entry);
+                intent.putExtras(b);
+                intent.putExtra("position", position);
+                intent.setClass(MainActivity.this, CreateEntry.class);
+                startActivityForResult(intent, EDIT_ENTRY);
+            }
+        });
     }
 
     @Override
@@ -78,39 +92,32 @@ public class MainActivity extends AppCompatActivity /*implements LocationListene
 
     public void createNewEntry(View v){
         Intent intent = new Intent(this, CreateEntry.class);
-        startActivity(intent);
-    }
-
-   /* public void Repeat(View view){
-        EditText editText = (EditText)findViewById(R.id.editText);
-        TextView repeat =  (TextView) findViewById(R.id.Repeat);
-        repeat.setText(editText.getText().toString());
+        startActivityForResult(intent, GET_ENTRY);
     }
 
     @Override
-    public void onLocationChanged(Location location) {
-        TextView Lat = (TextView) findViewById(R.id.Latitude);
-        TextView Long = (TextView) findViewById(R.id.Longitude);
-        Lat.setText("Latitude: " + location.getLatitude());
-        Long.setText("Longitude: " + location.getLongitude());
-        Log.d("LOCATION", "" + location.getLongitude());
+    protected void onActivityResult(int requestCode, int resultCode, Intent data){
+        if (requestCode == GET_ENTRY){
+            if (resultCode == RESULT_OK){
+                DiaryEntry entry = data.getParcelableExtra("entry");
+                entryList.add(entry);
+                adapter.notifyDataSetChanged();
+            }
+        }
+
+        if (requestCode == EDIT_ENTRY){
+            if (resultCode == RESULT_OK){
+                DiaryEntry entry = data.getParcelableExtra("entry");
+                int pos = data.getIntExtra("position", 0);
+                entryList.set(pos, entry);
+                adapter.notifyDataSetChanged();
+            }
+        }
     }
 
     @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-
+    public void onSaveInstanceState(Bundle savedInstanceState){
+        savedInstanceState.putParcelableArrayList(ENTRY_LIST_KEY, entryList);
     }
 
-    @Override
-    public void onProviderEnabled(String provider) {
-
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
-        TextView Lat = (TextView) findViewById(R.id.Latitude);
-        TextView Long = (TextView) findViewById(R.id.Longitude);
-        Lat.setText("OFF");
-        Long.setText("OFF");
-    }*/
 }
