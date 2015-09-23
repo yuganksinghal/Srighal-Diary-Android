@@ -2,6 +2,7 @@ package edu.virginia.cs.cs4720.diary;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -23,7 +24,7 @@ import java.util.ArrayList;
 import edu.virginia.cs.cs4720.diary.myapplication.R;
 
 
-public class MainActivity extends AppCompatActivity implements LocationListener {
+public class MainActivity extends AppCompatActivity /*implements LocationListener*/ {
 
     public ArrayList<DiaryEntry> entryList = new ArrayList<DiaryEntry>();
     ArrayAdapter<DiaryEntry> adapter;
@@ -33,7 +34,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        /*LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    public void requestPermissions(@NonNull String[] permissions, int requestCode)
@@ -45,12 +46,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             return;
         }
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, this);
-        Log.d("MAIN ACTIVITY","past registration");
+        Log.d("MAIN ACTIVITY","past registration");*/
 
-/*        ListView listView = (ListView)findViewById(R.id.listView);
+        ListView listView = (ListView)findViewById(R.id.listView);
         adapter = new ArrayAdapter<DiaryEntry>(this, android.R.layout.simple_list_item_1, entryList);
 
-        listView.setAdapter(adapter);*/
+        listView.setAdapter(adapter);
     }
 
     @Override
@@ -75,7 +76,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         return super.onOptionsItemSelected(item);
     }
 
-    public void Repeat(View view){
+    public void createNewEntry(View v){
+        Intent intent = new Intent(this, CreateEntry.class);
+        startActivity(intent);
+    }
+
+   /* public void Repeat(View view){
         EditText editText = (EditText)findViewById(R.id.editText);
         TextView repeat =  (TextView) findViewById(R.id.Repeat);
         repeat.setText(editText.getText().toString());
@@ -106,5 +112,5 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         TextView Long = (TextView) findViewById(R.id.Longitude);
         Lat.setText("OFF");
         Long.setText("OFF");
-    }
+    }*/
 }

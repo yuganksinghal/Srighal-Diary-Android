@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="edu.virginia.cs.cs4720.diary.myapplication" >
 
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -20,6 +22,14 @@
             android:name="edu.virginia.cs.cs4720.diary.EditEntry"
             android:label="@string/title_activity_edit_entry" >
         </activity>
+        <activity
+            android:name="edu.virginia.cs.cs4720.diary.CreateEntry"
+            android:label="@string/title_activity_create_entry"
+            android:parentActivityName="edu.virginia.cs.cs4720.diary.MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="edu.virginia.cs.cs4720.diary.MainActivity" />
+        </activity>
     </application>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
 </manifest>
