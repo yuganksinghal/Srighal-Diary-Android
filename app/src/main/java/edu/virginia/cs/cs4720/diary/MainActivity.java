@@ -1,6 +1,7 @@
 package edu.virginia.cs.cs4720.diary;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -20,6 +21,13 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 import edu.virginia.cs.cs4720.diary.myapplication.R;
@@ -29,6 +37,7 @@ public class MainActivity extends AppCompatActivity  {
 
     public ArrayList<DiaryEntry> entryList;
     ArrayAdapter<DiaryEntry> adapter;
+
 
     static final int GET_ENTRY = 1;
     static final int EDIT_ENTRY = 2;
@@ -66,6 +75,27 @@ public class MainActivity extends AppCompatActivity  {
                 startActivityForResult(intent, EDIT_ENTRY);
             }
         });
+        if(entryList.isEmpty()) {
+            String FILENAME = "Diary_Entries";
+            FileInputStream fis = null;
+            try {
+                fis = openFileInput(FILENAME);
+                BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+                String line;
+                while ((line = br.readLine()) != null) {
+                    String[] parts = line.split(":");
+                    DiaryEntry d = new DiaryEntry(parts[0], parts[1]);
+                    entryList.add(d);
+                }
+
+            } catch (FileNotFoundException e) {
+                Log.d("INFO", "NO FILE");
+            } catch (IOException e) {
+                Log.d("INFO", e.getStackTrace().toString());
+            }
+
+            adapter.notifyDataSetChanged();
+        }
     }
 
     @Override
@@ -102,6 +132,30 @@ public class MainActivity extends AppCompatActivity  {
                 DiaryEntry entry = data.getParcelableExtra("entry");
                 entryList.add(entry);
                 adapter.notifyDataSetChanged();
+
+                String FILENAME = "Diary_Entries";
+                String Entries = "";
+                FileOutputStream fos = null;
+                try {
+                    fos = openFileOutput(FILENAME, Context.MODE_PRIVATE);
+                } catch (FileNotFoundException e) {
+                    Log.d("ERROR", "ISSUE SAVING FILE TO MEMORY");
+                }
+                for(DiaryEntry a: entryList){
+                    Entries=Entries + a.getTitle() + ":" + a.getEntry() + "\n";
+                    Log.d("INFO", "WRITING");
+                }
+                try {
+                    fos.write(Entries.getBytes());
+                } catch (IOException e) {
+                    Log.d("ERROR", "ISSUE WRITING");
+                }
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                    Log.d("ERROR", "ISSUE CLOSING FILE");
+                }
+
             }
         }
 
@@ -111,6 +165,29 @@ public class MainActivity extends AppCompatActivity  {
                 int pos = data.getIntExtra("position", 0);
                 entryList.set(pos, entry);
                 adapter.notifyDataSetChanged();
+
+                String FILENAME = "Diary_Entries";
+                String Entries = "";
+                FileOutputStream fos = null;
+                try {
+                    fos = openFileOutput(FILENAME, Context.MODE_PRIVATE);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+                for(DiaryEntry a: entryList){
+                    Entries=Entries + a.getTitle() + ":" + a.getEntry() + "\n";
+                }
+                try {
+                    fos.write(Entries.getBytes());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
