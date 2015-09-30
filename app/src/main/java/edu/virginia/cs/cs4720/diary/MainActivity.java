@@ -97,7 +97,10 @@ public class MainActivity extends AppCompatActivity  {
                         continue;
                     }
                     String[] parts = Entries[i].split(":");
-                    DiaryEntry d = new DiaryEntry(parts[0], parts[1]);
+                    DiaryEntry d = new DiaryEntry(parts[1], parts[0]);
+                    if (parts.length > 2){
+                        d.setGeocache(parts[2]);
+                    }
                     entryList.add(d);
                 }
 
@@ -115,7 +118,7 @@ public class MainActivity extends AppCompatActivity  {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -130,10 +133,14 @@ public class MainActivity extends AppCompatActivity  {
             return true;
         }
 
+        if (id == R.id.action_add_entry){
+            createNewEntry();
+        }
+
         return super.onOptionsItemSelected(item);
     }
 
-    public void createNewEntry(View v){
+    public void createNewEntry(){
         Intent intent = new Intent(this, CreateEntry.class);
         startActivityForResult(intent, GET_ENTRY);
     }
@@ -155,7 +162,11 @@ public class MainActivity extends AppCompatActivity  {
                     Log.d("ERROR", "ISSUE SAVING FILE TO MEMORY");
                 }
                 for(DiaryEntry a: entryList){
-                    Entries=Entries + a.getTitle() + ":" + a.getEntry() + "~";
+                    Entries=Entries + a.getTitle() + ":" + a.getEntry();
+                    if (a.getGeocache() != null && a.getGeocache().length() > 0){
+                        Entries += ":"+a.getGeocache();
+                    }
+                    Entries += "~";
                     Log.d("INFO", "WRITING");
                 }
                 try {
@@ -188,7 +199,11 @@ public class MainActivity extends AppCompatActivity  {
                     e.printStackTrace();
                 }
                 for(DiaryEntry a: entryList){
-                    Entries=Entries + a.getTitle() + ":" + a.getEntry() + "~";
+                    Entries=Entries + a.getTitle() + ":" + a.getEntry();
+                    if (a.getGeocache() != null && a.getGeocache().length() > 0){
+                        Entries += ":"+a.getGeocache();
+                    }
+                    Entries += "~";
                 }
                 try {
                     fos.write(Entries.getBytes());
