@@ -81,9 +81,22 @@ public class MainActivity extends AppCompatActivity  {
             try {
                 fis = openFileInput(FILENAME);
                 BufferedReader br = new BufferedReader(new InputStreamReader(fis));
-                String line;
-                while ((line = br.readLine()) != null) {
-                    String[] parts = line.split(":");
+                String buffer = "";
+                int a;
+                while ((a = br.read()) != -1) {
+                    buffer = buffer + (char) a;
+                }
+
+                Log.d("BUFFER", buffer);
+
+                String[] Entries = buffer.split("~");
+                Log.d("LENGTH", "" + Entries.length);
+                for (int i = 0; i < Entries.length; i++){
+                    Log.d("ENTRY", Entries[i]);
+                    if(Entries[i].isEmpty()){
+                        continue;
+                    }
+                    String[] parts = Entries[i].split(":");
                     DiaryEntry d = new DiaryEntry(parts[0], parts[1]);
                     entryList.add(d);
                 }
@@ -142,7 +155,7 @@ public class MainActivity extends AppCompatActivity  {
                     Log.d("ERROR", "ISSUE SAVING FILE TO MEMORY");
                 }
                 for(DiaryEntry a: entryList){
-                    Entries=Entries + a.getTitle() + ":" + a.getEntry() + "\n";
+                    Entries=Entries + a.getTitle() + ":" + a.getEntry() + "~";
                     Log.d("INFO", "WRITING");
                 }
                 try {
@@ -175,7 +188,7 @@ public class MainActivity extends AppCompatActivity  {
                     e.printStackTrace();
                 }
                 for(DiaryEntry a: entryList){
-                    Entries=Entries + a.getTitle() + ":" + a.getEntry() + "\n";
+                    Entries=Entries + a.getTitle() + ":" + a.getEntry() + "~";
                 }
                 try {
                     fos.write(Entries.getBytes());
