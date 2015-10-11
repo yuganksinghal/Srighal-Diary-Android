@@ -36,7 +36,7 @@ import edu.virginia.cs.cs4720.diary.myapplication.R;
 public class MainActivity extends AppCompatActivity  {
 
     public ArrayList<DiaryEntry> entryList;
-    ArrayAdapter<DiaryEntry> adapter;
+    EntryAdapter adapter;
 
 
     static final int GET_ENTRY = 1;
@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity  {
         setContentView(R.layout.activity_main);
 
         ListView listView = (ListView)findViewById(R.id.listView);
-        adapter = new ArrayAdapter<DiaryEntry>(this, android.R.layout.simple_list_item_1, entryList);
+        adapter = new EntryAdapter(this,  entryList);
 
         listView.setAdapter(adapter);
 
