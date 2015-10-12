@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="sort_type_array">
+        <item>Oldest first</item>
+        <item>Newest first</item>
+        <item>Alphabetical by Title (ascending)</item>
+        <item>Alphabetical by Title (descending)</item>
+    </string-array>
+</resources>

@@ -19,6 +19,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
@@ -29,15 +30,20 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 import edu.virginia.cs.cs4720.diary.myapplication.R;
 
 
-public class MainActivity extends AppCompatActivity  {
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener{
 
     public ArrayList<DiaryEntry> entryList;
     EntryAdapter adapter;
-
+    enum Sort{
+        NEWEST_FIRST, OLDEST_FIRST, TITLE_ASCENDING, TITLE_DESCENDING
+    }
+    Sort currentSort;
 
     static final int GET_ENTRY = 1;
     static final int EDIT_ENTRY = 2;
@@ -56,6 +62,16 @@ public class MainActivity extends AppCompatActivity  {
         }
 
         setContentView(R.layout.activity_main);
+
+        Spinner spinner = (Spinner) findViewById(R.id.spinner);
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(this,
+                R.array.sort_type_array, android.R.layout.simple_spinner_item);
+        // Specify the layout to use when the list of choices appears
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the adapter to the spinner
+        spinner.setAdapter(spinnerAdapter);
+        spinner.setOnItemSelectedListener(this);
 
         ListView listView = (ListView)findViewById(R.id.listView);
         adapter = new EntryAdapter(this,  entryList);
@@ -118,7 +134,40 @@ public class MainActivity extends AppCompatActivity  {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        return super.onCreateOptionsMenu(menu);
+
+//        mSpinnerItem1 = menu.findItem( R.id.spinner);
+//        View view1 = mSpinnerItem1.getActionView();
+//        if (view1 instanceof Spinner)
+//        {
+//            final Spinner spinner = (Spinner) view1;
+//            ad1 = ArrayAdapter.createFromResource(this.getActionBar()
+//                            .getThemedContext(),
+//                R.array.sort_type_array, android.R.layout.simple_spinner_item);
+//            ad1.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//
+//            spinner.setAdapter(ad1);
+//
+//
+//            spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+//
+//                @Override
+//                public void onItemSelected(AdapterView<?> arg0, View arg1,
+//                                           int arg2, long arg3) {
+//                    Log.d("Selected", arg0.getItemAtPosition(arg2).toString());
+//
+//                }
+//
+//                @Override
+//                public void onNothingSelected(AdapterView<?> arg0) {
+//                    // TODO Auto-generated method stub
+//
+//                }
+//            });
+//
+//        }
+
+       return super.onCreateOptionsMenu(menu);
+        //return true;
     }
 
     @Override
@@ -127,11 +176,6 @@ public class MainActivity extends AppCompatActivity  {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
 
         if (id == R.id.action_add_entry){
             createNewEntry();
@@ -224,5 +268,56 @@ public class MainActivity extends AppCompatActivity  {
     public void onSaveInstanceState(Bundle savedInstanceState){
         savedInstanceState.putParcelableArrayList(ENTRY_LIST_KEY, entryList);
     }
+
+    public void onItemSelected(AdapterView<?> parent, View view,
+                               int pos, long id) {
+        // An item was selected. You can retrieve the selected item using
+        // parent.getItemAtPosition(pos)
+        Log.d("selected", parent.getItemAtPosition(pos).toString());
+        switch (parent.getItemAtPosition(pos).toString()){
+            case "Oldest first":
+                currentSort = Sort.OLDEST_FIRST;
+                Collections.sort(entryList, new Comparator<DiaryEntry>() {
+                public int compare (DiaryEntry d1, DiaryEntry d2){
+                    return d1.getEntryDate().compareTo(d2.getEntryDate());
+                }
+                });
+                adapter.notifyDataSetChanged();
+                break;
+            case "Newest first":
+                currentSort = Sort.NEWEST_FIRST;
+                Collections.sort(entryList, new Comparator<DiaryEntry>() {
+                    public int compare (DiaryEntry d1, DiaryEntry d2){
+                        return d2.getEntryDate().compareTo(d1.getEntryDate());
+                    }
+                });
+                adapter.notifyDataSetChanged();
+                break;
+            case "Alphabetical by Title (ascending)":
+                currentSort = Sort.TITLE_ASCENDING;
+                Collections.sort(entryList, new Comparator<DiaryEntry>() {
+                    public int compare (DiaryEntry d1, DiaryEntry d2){
+                        return d1.getTitle().compareTo(d2.getTitle());
+                    }
+                });
+                adapter.notifyDataSetChanged();
+                break;
+            case "Alphabetical by Title (descending)":
+                currentSort = Sort.TITLE_DESCENDING;
+                Collections.sort(entryList, new Comparator<DiaryEntry>() {
+                    public int compare (DiaryEntry d1, DiaryEntry d2){
+                        return d2.getTitle().compareTo(d1.getTitle());
+                    }
+                });
+                adapter.notifyDataSetChanged();
+                break;
+        }
+
+    }
+
+    public void onNothingSelected(AdapterView<?> parent) {
+        // Another interface callback
+    }
+
 
 }

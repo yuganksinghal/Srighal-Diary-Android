@@ -5,6 +5,5 @@
         android:icon="@drawable/ic_add_black_24dp"
         android:title="New Entry"
         app:showAsAction="ifRoom" />
-    <item android:id="@+id/action_settings" android:title="@string/action_settings"
-        android:orderInCategory="100" app:showAsAction="never" />
+
 </menu>
