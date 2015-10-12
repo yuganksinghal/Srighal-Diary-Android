@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -12,6 +13,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
+import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.content.ContextCompat;
@@ -21,10 +23,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
@@ -38,11 +42,12 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
     private DiaryEntry entry;
     private int pos;
     private double lat, longi;
+    static final int SELECT_PICTURE = 1;
     static final int REQUEST_IMAGE_CAPTURE = 1;
     private MediaRecorder mRecorder = null;
     private MediaPlayer mPlayer = null;
-    String AudioFile;
-    String PictureFile;
+    String AudioFile = null;
+    String PictureFile = null;
 
 
     @Override
@@ -112,6 +117,8 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
         }
         //if (lat!=null && longi !=null) {
             entry.setGeocache("" + lat + "," + longi);
+            entry.setPicture(PictureFile);
+            entry.setVoice(AudioFile);
         //}
 
         returnIntent.putExtra("entry", entry);
@@ -135,7 +142,10 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
             loc.setText("Last saved at: "+locality);
         } catch (IOException e){}
         catch (NullPointerException e){}
+        catch (IndexOutOfBoundsException e){}
         Log.d("LOCATION", "" + location.getLongitude());
+        Log.d("PATHNAME", AudioFile);
+        Log.d("PATHNAME", PictureFile);
     }
 
     @Override
@@ -159,25 +169,71 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
     }
 
     public void takePicture(View v) {
+
+/*        Intent pickIntent = new Intent();
+        pickIntent.setType("image*//*");
+        pickIntent.setAction(Intent.ACTION_GET_CONTENT);
+
+        Intent takePhotoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+        String pickTitle = "Select or take a new Picture"; // Or get from strings.xml
+        Intent chooserIntent = Intent.createChooser(pickIntent, pickTitle);
+        chooserIntent.putExtra
+                (
+                        Intent.EXTRA_INITIAL_INTENTS,
+                        new Intent[]{takePhotoIntent}
+                );
+        startActivityForResult(chooserIntent, SELECT_PICTURE);*/
+
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex){}
+            if (photoFile != null) {
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile));
+                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+            }
         }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d("RESULT", "" + resultCode);
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
-            Bundle extras = data.getExtras();
-            Bitmap imageBitmap = (Bitmap) extras.get("data");
-            ImageView mImageView = (ImageView) findViewById(R.id.imageView);
-            mImageView.setImageBitmap(imageBitmap);
+            File imgFile = new  File(PictureFile);
+            if(imgFile.exists()){
+                Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+                ImageView myImage = (ImageView) findViewById(R.id.imageView);
+                myImage.setImageBitmap(myBitmap);
+            }
+
+                /*Bundle extras = data.getExtras();
+                Bitmap imageBitmap = (Bitmap) extras.get("data");
+                ImageView mImageView = (ImageView) findViewById(R.id.imageView);
+                mImageView.setImageBitmap(imageBitmap);*/
         }
     }
 
+    private File createImageFile() throws IOException {
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp;
+        File storageDir = getExternalFilesDir(null);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        PictureFile = image.getAbsolutePath();
+        return image;
+    }
+
     public void onRecord(View v){
-        //AudioFile = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date()) + ".3gp";
-        AudioFile = getFilesDir() + "PREETAMSUX.3gp";
+        AudioFile = getExternalFilesDir(null) + "/" + new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date()) + ".3gp";
+        //AudioFile = getFilesDir() + "PREETAMSUX.3gp";
         mRecorder = new MediaRecorder();
         mRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
         mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
@@ -191,29 +247,87 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
             Log.e("MICROPHONE", e.getMessage());
         }
 
+        Button Record = (Button) findViewById(R.id.RecordButton);
+        Button Play = (Button) findViewById(R.id.PlayButton);
 
+        Record.setText("Stop Recording");
+        Record.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                stopRecording(v);
+            }
+        });
+
+        Play.setVisibility(View.GONE);
     }
 
     public void stopRecording(View v) {
         mRecorder.stop();
         mRecorder.release();
         mRecorder = null;
+
+        Button Record = (Button) findViewById(R.id.RecordButton);
+        Button Play = (Button) findViewById(R.id.PlayButton);
+
+        Record.setText("Record");
+        Record.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                onRecord(v);
+            }
+        });
+
+        Play.setVisibility(View.VISIBLE);
     }
 
     public void onPlay(View v) {
         mPlayer = new MediaPlayer();
+        final Button Record = (Button) findViewById(R.id.RecordButton);
+        final Button Play = (Button) findViewById(R.id.PlayButton);
+
         try {
             mPlayer.setDataSource(AudioFile);
             mPlayer.prepare();
             mPlayer.start();
+            mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+                    Play.setText("Play");
+                    Play.setOnClickListener(new View.OnClickListener() {
+                        public void onClick(View v) {
+                            onPlay(v);
+                        }
+                    });
+
+                    Record.setVisibility(View.VISIBLE);
+                }
+            });
+            Play.setText("Stop Playing");
+            Play.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    stopPlaying(v);
+                }
+            });
+            Record.setVisibility(View.INVISIBLE);
         } catch (IOException e) {
             Log.e( "AUDIO", "prepare() failed");
         }
     }
 
+
     public void stopPlaying(View v) {
         mPlayer.release();
         mPlayer = null;
+
+        Button Record = (Button) findViewById(R.id.RecordButton);
+        Button Play = (Button) findViewById(R.id.PlayButton);
+
+        Play.setText("Play");
+        Play.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                onPlay(v);
+            }
+        });
+
+        Record.setVisibility(View.VISIBLE);
     }
 
 }

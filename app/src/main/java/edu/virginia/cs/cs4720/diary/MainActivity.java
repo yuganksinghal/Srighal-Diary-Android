@@ -199,10 +199,12 @@ public class MainActivity extends AppCompatActivity  {
                     e.printStackTrace();
                 }
                 for(DiaryEntry a: entryList){
-                    Entries=Entries + a.getTitle() + ":" + a.getEntry();
+                    Entries=Entries + a.getTitle() + "`" + a.getEntry();
                     if (a.getGeocache() != null && a.getGeocache().length() > 0){
-                        Entries += ":"+a.getGeocache();
+                        Entries += "`"+a.getGeocache();
                     }
+                    
+
                     Entries += "~";
                 }
                 try {
