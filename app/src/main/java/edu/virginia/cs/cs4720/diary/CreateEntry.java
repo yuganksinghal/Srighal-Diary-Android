@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -20,12 +22,17 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
+
 import edu.virginia.cs.cs4720.diary.myapplication.R;
 
 public class CreateEntry extends AppCompatActivity implements LocationListener {
 
     private DiaryEntry entry;
     private int pos;
+    private double lat, longi;
     static final int REQUEST_IMAGE_CAPTURE = 1;
 
     @Override
@@ -93,7 +100,9 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
         else {
             entry = new DiaryEntry(entryText, titleText);
         }
-        entry.setGeocache( ((TextView) findViewById(R.id.Latitude)).getText().toString()+","+ ((TextView) findViewById(R.id.Longitude)).getText().toString() );
+        //if (lat!=null && longi !=null) {
+            entry.setGeocache("" + lat + "," + longi);
+        //}
 
         returnIntent.putExtra("entry", entry);
         setResult(RESULT_OK, returnIntent);
@@ -102,10 +111,20 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
 
     @Override
     public void onLocationChanged(Location location) {
-        TextView lat = (TextView) findViewById(R.id.Latitude);
-        TextView longi = (TextView) findViewById(R.id.Longitude);
-        lat.setText("Latitude: " + location.getLatitude());
-        longi.setText("Longitude: " + location.getLongitude());
+        //TextView lat = (TextView) findViewById(R.id.Latitude);
+        //TextView longi = (TextView) findViewById(R.id.Longitude);
+        //lat.setText("Latitude: " + location.getLatitude());
+        //longi.setText("Longitude: " + location.getLongitude());
+        TextView loc = (TextView) findViewById(R.id.location);
+        lat = location.getLatitude();
+        longi = location.getLongitude();
+        Geocoder geoCoder = new Geocoder(this, Locale.getDefault());
+        try{
+            List<Address> address = geoCoder.getFromLocation(lat, longi, 1);
+            String locality = address.get(0).getLocality();
+            loc.setText("Last saved at: "+locality);
+        } catch (IOException e){}
+        catch (NullPointerException e){}
         Log.d("LOCATION", "" + location.getLongitude());
     }
 
@@ -121,10 +140,12 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
 
     @Override
     public void onProviderDisabled(String provider) {
-        TextView Lat = (TextView) findViewById(R.id.Latitude);
-        TextView Long = (TextView) findViewById(R.id.Longitude);
-        Lat.setText("OFF");
-        Long.setText("OFF");
+        //TextView Lat = (TextView) findViewById(R.id.Latitude);
+        //TextView Long = (TextView) findViewById(R.id.Longitude);
+        //Lat.setText("OFF");
+        //Long.setText("OFF");
+        TextView loc = (TextView) findViewById(R.id.location);
+        loc.setText("Location is off");
     }
 
     public void takePicture(View v) {
