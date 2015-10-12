@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity  {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                DiaryEntry entry = (DiaryEntry)parent.getItemAtPosition(position);
+                DiaryEntry entry = (DiaryEntry) parent.getItemAtPosition(position);
                 Intent intent = new Intent();
                 Bundle b = new Bundle();
                 b.putParcelable("existing_entry", entry);
@@ -96,12 +96,25 @@ public class MainActivity extends AppCompatActivity  {
                     if(Entries[i].isEmpty()){
                         continue;
                     }
-                    String[] parts = Entries[i].split(":");
+                    String[] parts = Entries[i].split("`");
                     DiaryEntry d = new DiaryEntry(parts[1], parts[0]);
-                    if (parts.length > 2){
+                    if ((parts[2].length()>0) && parts[2] != null){
                         d.setGeocache(parts[2]);
                     }
+
+                    if ((parts[3].length()>0) && parts[3] != null){
+                        d.setPicture(parts[3]);
+                    }
+
+                    if ((parts[4].length()>0) && parts[4] != null){
+                        d.setVoice(parts[4]);
+                    }
+
+                    Log.d("ENTRY", d.getPicture());
+
                     entryList.add(d);
+
+                    Log.d("ENTRYSAVE", d.toString());
                 }
 
             } catch (FileNotFoundException e) {
@@ -162,12 +175,10 @@ public class MainActivity extends AppCompatActivity  {
                     Log.d("ERROR", "ISSUE SAVING FILE TO MEMORY");
                 }
                 for(DiaryEntry a: entryList){
-                    Entries=Entries + a.getTitle() + ":" + a.getEntry();
-                    if (a.getGeocache() != null && a.getGeocache().length() > 0){
-                        Entries += ":"+a.getGeocache();
-                    }
+                    Entries=Entries + a.getTitle() + "`" + a.getEntry() + "`" + a.getGeocache() + "`" + a.getPicture() + "`" + a.getVoice();
                     Entries += "~";
                     Log.d("INFO", "WRITING");
+                    Log.d("ENTRY", Entries);
                 }
                 try {
                     fos.write(Entries.getBytes());
@@ -199,12 +210,7 @@ public class MainActivity extends AppCompatActivity  {
                     e.printStackTrace();
                 }
                 for(DiaryEntry a: entryList){
-                    Entries=Entries + a.getTitle() + "`" + a.getEntry();
-                    if (a.getGeocache() != null && a.getGeocache().length() > 0){
-                        Entries += "`"+a.getGeocache();
-                    }
-                    
-
+                    Entries=Entries + a.getTitle() + "`" + a.getEntry() + "`" + a.getGeocache() + "`" + a.getPicture() + "`" + a.getVoice();
                     Entries += "~";
                 }
                 try {

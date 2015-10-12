@@ -60,6 +60,21 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
             entry = b.getParcelable("existing_entry");
             ((EditText) (findViewById(R.id.entryText))).setText(entry.getEntry());
             ((EditText) (findViewById(R.id.titleText))).setText(entry.getTitle());
+
+            PictureFile = entry.getPicture();
+            AudioFile = entry.getVoice();
+
+            File imgFile = new  File(PictureFile);
+            if(imgFile.exists()){
+                Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+                ImageView myImage = (ImageView) findViewById(R.id.imageView);
+                myImage.setImageBitmap(myBitmap);
+            }
+
+            if(AudioFile != null){
+                ((Button)(findViewById(R.id.PlayButton))).setVisibility(View.VISIBLE);
+            }
+
             pos = this.getIntent().getIntExtra("position", 0);
         }
         else{
@@ -144,8 +159,6 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
         catch (NullPointerException e){}
         catch (IndexOutOfBoundsException e){}
         Log.d("LOCATION", "" + location.getLongitude());
-        Log.d("PATHNAME", AudioFile);
-        Log.d("PATHNAME", PictureFile);
     }
 
     @Override
