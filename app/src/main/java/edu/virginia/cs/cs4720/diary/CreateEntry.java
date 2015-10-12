@@ -10,6 +10,9 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.MediaPlayer;
+import android.media.MediaRecorder;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -25,6 +28,8 @@ import android.widget.TextView;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import edu.virginia.cs.cs4720.diary.myapplication.R;
 
@@ -34,6 +39,11 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
     private int pos;
     private double lat, longi;
     static final int REQUEST_IMAGE_CAPTURE = 1;
+    private MediaRecorder mRecorder = null;
+    private MediaPlayer mPlayer = null;
+    String AudioFile;
+    String PictureFile;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -164,4 +174,46 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
             mImageView.setImageBitmap(imageBitmap);
         }
     }
+
+    public void onRecord(View v){
+        //AudioFile = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date()) + ".3gp";
+        AudioFile = getFilesDir() + "PREETAMSUX.3gp";
+        mRecorder = new MediaRecorder();
+        mRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
+        mRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+        mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+        mRecorder.setOutputFile( AudioFile);
+
+        try {
+            mRecorder.prepare();
+            mRecorder.start();
+        } catch (IOException e) {
+            Log.e("MICROPHONE", e.getMessage());
+        }
+
+
+    }
+
+    public void stopRecording(View v) {
+        mRecorder.stop();
+        mRecorder.release();
+        mRecorder = null;
+    }
+
+    public void onPlay(View v) {
+        mPlayer = new MediaPlayer();
+        try {
+            mPlayer.setDataSource(AudioFile);
+            mPlayer.prepare();
+            mPlayer.start();
+        } catch (IOException e) {
+            Log.e( "AUDIO", "prepare() failed");
+        }
+    }
+
+    public void stopPlaying(View v) {
+        mPlayer.release();
+        mPlayer = null;
+    }
+
 }

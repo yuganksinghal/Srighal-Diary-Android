@@ -72,4 +72,48 @@
         android:nestedScrollingEnabled="false"
         android:onClick="takePicture" />
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Record"
+        android:id="@+id/button3"
+        android:nestedScrollingEnabled="false"
+        android:onClick="onRecord"
+        android:layout_above="@+id/imageView"
+        android:layout_toRightOf="@+id/Longitude"
+        android:layout_toEndOf="@+id/Longitude" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Stop Record"
+        android:id="@+id/button4"
+        android:nestedScrollingEnabled="false"
+        android:layout_above="@+id/imageView"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:onClick="stopRecording" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Play"
+        android:id="@+id/button5"
+        android:nestedScrollingEnabled="false"
+        android:onClick="onPlay"
+        android:layout_below="@+id/button3"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Stop Playing"
+        android:id="@+id/button6"
+        android:nestedScrollingEnabled="false"
+        android:onClick="stopPlaying"
+        android:layout_below="@+id/button4"
+        android:layout_alignRight="@+id/button4"
+        android:layout_alignEnd="@+id/button4" />
+
 </RelativeLayout>
