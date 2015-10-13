@@ -19,7 +19,8 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
         android:hint="Title"
-        android:inputType="text" />
+        android:inputType="text"
+        android:selectAllOnFocus="true" />
 
     <EditText
         android:layout_width="wrap_content"
@@ -44,7 +45,9 @@
         android:onClick="onSave"
         android:layout_below="@+id/entryText"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:backgroundTint="#FF2E8A"
+        android:textColor="#FFEC47" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -63,7 +66,9 @@
         android:onClick="takePicture"
         android:layout_alignTop="@+id/save"
         android:layout_toRightOf="@+id/save"
-        android:layout_toEndOf="@+id/save" />
+        android:layout_toEndOf="@+id/save"
+        android:backgroundTint="#FF2E8A"
+        android:textColor="#FFEC47" />
 
     <Button
         android:layout_width="wrap_content"
@@ -74,7 +79,9 @@
         android:onClick="onRecord"
         android:layout_alignTop="@+id/button"
         android:layout_toRightOf="@+id/button"
-        android:layout_toEndOf="@+id/button" />
+        android:layout_toEndOf="@+id/button"
+        android:backgroundTint="#FF2E8A"
+        android:textColor="#FFEC47" />
 
     <Button
         android:layout_width="wrap_content"
@@ -86,7 +93,9 @@
         android:visibility="gone"
         android:layout_alignTop="@+id/RecordButton"
         android:layout_toRightOf="@+id/RecordButton"
-        android:layout_toEndOf="@+id/RecordButton" />
+        android:layout_toEndOf="@+id/RecordButton"
+        android:backgroundTint="#FF2E8A"
+        android:textColor="#FFEC47" />
 
     <ImageView
         android:layout_width="wrap_content"
