@@ -71,8 +71,9 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
                 File imgFile = new File(PictureFile);
                 if (imgFile.exists()) {
                     Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+                    Bitmap scaled = Bitmap.createScaledBitmap(myBitmap, (int) (myBitmap.getWidth() * 0.3), (int) (myBitmap.getHeight() * 0.3), true);
                     ImageView myImage = (ImageView) findViewById(R.id.imageView);
-                    myImage.setImageBitmap(myBitmap);
+                    myImage.setImageBitmap(scaled);
                 }
             }
 
@@ -234,8 +235,9 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
             File imgFile = new  File(PictureFile);
             if(imgFile.exists()){
                 Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+                Bitmap scaled = Bitmap.createScaledBitmap(myBitmap,(int)(myBitmap.getWidth()*0.3), (int)(myBitmap.getHeight()*0.3), true);
                 ImageView myImage = (ImageView) findViewById(R.id.imageView);
-                myImage.setImageBitmap(myBitmap);
+                myImage.setImageBitmap(scaled);
             }
 
                 /*Bundle extras = data.getExtras();

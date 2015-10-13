@@ -8,6 +8,7 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 import edu.virginia.cs.cs4720.diary.myapplication.R;
@@ -52,7 +53,7 @@ public class EntryAdapter extends BaseAdapter {
         TextView title = (TextView) vi.findViewById(R.id.title);
         title.setText(list.get(position).getTitle());
         TextView date = (TextView) vi.findViewById(R.id.date);
-        date.setText(DateFormat.getDateInstance().format( list.get(position).getEntryDate() ) );
+        date.setText(new SimpleDateFormat("MM/dd/yyyy").format( list.get(position).getEntryDate() ) );
 
         TextView prev = (TextView) vi.findViewById(R.id.preview);
         String previewString = list.get(position).getEntry();

@@ -2,6 +2,7 @@ package edu.virginia.cs.cs4720.diary;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -41,6 +42,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     static final String ENTRY_LIST_KEY = "Entry list";
 
+    private SharedPreferences mPrefs;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,6 +55,23 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
         else{
             entryList = new ArrayList<DiaryEntry>();
+        }
+
+        mPrefs = getPreferences(MODE_PRIVATE);
+        String storedVal = mPrefs.getString("sort", "OLDEST_FIRST");
+        switch (storedVal){
+            case "OLDEST_FIRST":
+                currentSort = Sort.OLDEST_FIRST;
+                break;
+            case "NEWEST_FIRST":
+                currentSort = Sort.NEWEST_FIRST;
+                break;
+            case "TITLE_ASCENDING":
+                currentSort = Sort.TITLE_ASCENDING;
+                break;
+            case "TITLE_DESCENDING":
+                currentSort = Sort.TITLE_DESCENDING;
+                break;
         }
 
         setContentView(R.layout.activity_main);
@@ -136,25 +157,27 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 Log.d("INFO", e.getStackTrace().toString());
             }
 
-            if (currentSort != null) {
-                switch (currentSort) {
-                    case NEWEST_FIRST:
-                        sortNewestFirst();
-                        break;
-                    case OLDEST_FIRST:
-                        sortOldestFirst();
-                        break;
-                    case TITLE_ASCENDING:
-                        sortTitleAscending();
-                        break;
-                    case TITLE_DESCENDING:
-                        sortTitleDescending();
-                        break;
-                }
+
+        }
+
+        if (currentSort != null) {
+            switch (currentSort) {
+                case NEWEST_FIRST:
+                    sortNewestFirst();
+                    break;
+                case OLDEST_FIRST:
+                    sortOldestFirst();
+                    break;
+                case TITLE_ASCENDING:
+                    sortTitleAscending();
+                    break;
+                case TITLE_DESCENDING:
+                    sortTitleDescending();
+                    break;
             }
-            else{
-                sortOldestFirst();
-            }
+        }
+        else{
+            sortOldestFirst();
         }
     }
 
@@ -328,6 +351,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                int pos, long id) {
         // An item was selected. You can retrieve the selected item using
         // parent.getItemAtPosition(pos)
+
         Log.d("selected", parent.getItemAtPosition(pos).toString());
         switch (parent.getItemAtPosition(pos).toString()){
             case "Oldest first":
@@ -388,5 +412,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             }
         });
         adapter.notifyDataSetChanged();
+    }
+
+    protected void onPause(){
+        super.onPause();
+        SharedPreferences.Editor ed = mPrefs.edit();
+        ed.putString("sort", currentSort.toString());
+        ed.commit();
     }
 }
