@@ -1,15 +1,8 @@
 package edu.virginia.cs.cs4720.diary;
 
-import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -17,21 +10,19 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
-import android.widget.TextView;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 
 import edu.virginia.cs.cs4720.diary.myapplication.R;
 
@@ -56,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         if (savedInstanceState != null){
             entryList = savedInstanceState.getParcelableArrayList(ENTRY_LIST_KEY);
+            currentSort = Sort.values()[savedInstanceState.getInt("s")];
         }
         else{
             entryList = new ArrayList<DiaryEntry>();
@@ -126,6 +118,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                         d.setVoice(parts[4]);
                     }
 
+                    if ((parts[5].length()>0) && parts[5] != null){
+                        long t = Long.parseLong(parts[5]);
+                        d.setEntryDate(new Date(t));
+                    }
+
                     Log.d("ENTRY", d.getPicture());
 
                     entryList.add(d);
@@ -139,7 +136,25 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 Log.d("INFO", e.getStackTrace().toString());
             }
 
-            adapter.notifyDataSetChanged();
+            if (currentSort != null) {
+                switch (currentSort) {
+                    case NEWEST_FIRST:
+                        sortNewestFirst();
+                        break;
+                    case OLDEST_FIRST:
+                        sortOldestFirst();
+                        break;
+                    case TITLE_ASCENDING:
+                        sortTitleAscending();
+                        break;
+                    case TITLE_DESCENDING:
+                        sortTitleDescending();
+                        break;
+                }
+            }
+            else{
+                sortOldestFirst();
+            }
         }
     }
 
@@ -208,7 +223,21 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             if (resultCode == RESULT_OK){
                 DiaryEntry entry = data.getParcelableExtra("entry");
                 entryList.add(entry);
-                adapter.notifyDataSetChanged();
+                switch (currentSort){
+                    case NEWEST_FIRST:
+                        sortNewestFirst();
+                        break;
+                    case OLDEST_FIRST:
+                        sortOldestFirst();
+                        break;
+                    case TITLE_ASCENDING:
+                        sortTitleAscending();
+                        break;
+                    case TITLE_DESCENDING:
+                        sortTitleDescending();
+                        break;
+                }
+                //adapter.notifyDataSetChanged();
 
                 String FILENAME = "Diary_Entries";
                 String Entries = "";
@@ -219,7 +248,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     Log.d("ERROR", "ISSUE SAVING FILE TO MEMORY");
                 }
                 for(DiaryEntry a: entryList){
-                    Entries=Entries + a.getTitle() + "`" + a.getEntry() + "`" + a.getGeocache() + "`" + a.getPicture() + "`" + a.getVoice();
+                    Entries=Entries + a.getTitle() + "`" + a.getEntry() + "`" + a.getGeocache() + "`" + a.getPicture() + "`" + a.getVoice()+"`"+a.getEntryDate().getTime();
                     Entries += "~";
                     Log.d("INFO", "WRITING");
                     Log.d("ENTRY", Entries);
@@ -243,7 +272,23 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 DiaryEntry entry = data.getParcelableExtra("entry");
                 int pos = data.getIntExtra("position", 0);
                 entryList.set(pos, entry);
-                adapter.notifyDataSetChanged();
+
+                switch (currentSort){
+                    case NEWEST_FIRST:
+                        sortNewestFirst();
+                        break;
+                    case OLDEST_FIRST:
+                        sortOldestFirst();
+                        break;
+                    case TITLE_ASCENDING:
+                        sortTitleAscending();
+                        break;
+                    case TITLE_DESCENDING:
+                        sortTitleDescending();
+                        break;
+                }
+
+                //adapter.notifyDataSetChanged();
 
                 String FILENAME = "Diary_Entries";
                 String Entries = "";
@@ -254,7 +299,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     e.printStackTrace();
                 }
                 for(DiaryEntry a: entryList){
-                    Entries=Entries + a.getTitle() + "`" + a.getEntry() + "`" + a.getGeocache() + "`" + a.getPicture() + "`" + a.getVoice();
+                    Entries=Entries + a.getTitle() + "`" + a.getEntry() + "`" + a.getGeocache() + "`" + a.getPicture() + "`" + a.getVoice()+"`"+a.getEntryDate().getTime();
                     Entries += "~";
                 }
                 try {
@@ -275,6 +320,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState){
         savedInstanceState.putParcelableArrayList(ENTRY_LIST_KEY, entryList);
+        Bundle s = new Bundle();
+        savedInstanceState.putInt("s", currentSort.ordinal());
     }
 
     public void onItemSelected(AdapterView<?> parent, View view,
@@ -284,40 +331,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         Log.d("selected", parent.getItemAtPosition(pos).toString());
         switch (parent.getItemAtPosition(pos).toString()){
             case "Oldest first":
-                currentSort = Sort.OLDEST_FIRST;
-                Collections.sort(entryList, new Comparator<DiaryEntry>() {
-                public int compare (DiaryEntry d1, DiaryEntry d2){
-                    return d1.getEntryDate().compareTo(d2.getEntryDate());
-                }
-                });
-                adapter.notifyDataSetChanged();
+                sortOldestFirst();
                 break;
             case "Newest first":
-                currentSort = Sort.NEWEST_FIRST;
-                Collections.sort(entryList, new Comparator<DiaryEntry>() {
-                    public int compare (DiaryEntry d1, DiaryEntry d2){
-                        return d2.getEntryDate().compareTo(d1.getEntryDate());
-                    }
-                });
-                adapter.notifyDataSetChanged();
+                sortNewestFirst();
                 break;
             case "Alphabetical by Title (ascending)":
-                currentSort = Sort.TITLE_ASCENDING;
-                Collections.sort(entryList, new Comparator<DiaryEntry>() {
-                    public int compare (DiaryEntry d1, DiaryEntry d2){
-                        return d1.getTitle().compareTo(d2.getTitle());
-                    }
-                });
-                adapter.notifyDataSetChanged();
+                sortTitleAscending();
                 break;
             case "Alphabetical by Title (descending)":
-                currentSort = Sort.TITLE_DESCENDING;
-                Collections.sort(entryList, new Comparator<DiaryEntry>() {
-                    public int compare (DiaryEntry d1, DiaryEntry d2){
-                        return d2.getTitle().compareTo(d1.getTitle());
-                    }
-                });
-                adapter.notifyDataSetChanged();
+                sortTitleDescending();
                 break;
         }
 
@@ -327,5 +350,43 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         // Another interface callback
     }
 
+    private void sortOldestFirst(){
+        currentSort = Sort.OLDEST_FIRST;
+        Collections.sort(entryList, new Comparator<DiaryEntry>() {
+            public int compare (DiaryEntry d1, DiaryEntry d2){
+                return d1.getEntryDate().compareTo(d2.getEntryDate());
+            }
+        });
+        adapter.notifyDataSetChanged();
+    }
 
+    private void sortNewestFirst(){
+        currentSort = Sort.NEWEST_FIRST;
+        Collections.sort(entryList, new Comparator<DiaryEntry>() {
+            public int compare (DiaryEntry d1, DiaryEntry d2){
+                return d2.getEntryDate().compareTo(d1.getEntryDate());
+            }
+        });
+        adapter.notifyDataSetChanged();
+    }
+
+    private void sortTitleAscending(){
+        currentSort = Sort.TITLE_ASCENDING;
+        Collections.sort(entryList, new Comparator<DiaryEntry>() {
+            public int compare (DiaryEntry d1, DiaryEntry d2){
+                return d1.getTitle().compareTo(d2.getTitle());
+            }
+        });
+        adapter.notifyDataSetChanged();
+    }
+
+    private void sortTitleDescending(){
+        currentSort = Sort.TITLE_DESCENDING;
+        Collections.sort(entryList, new Comparator<DiaryEntry>() {
+            public int compare (DiaryEntry d1, DiaryEntry d2){
+                return d2.getTitle().compareTo(d1.getTitle());
+            }
+        });
+        adapter.notifyDataSetChanged();
+    }
 }

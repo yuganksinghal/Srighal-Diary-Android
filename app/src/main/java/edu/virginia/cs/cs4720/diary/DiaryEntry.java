@@ -20,7 +20,6 @@ public class DiaryEntry implements Parcelable {
     public DiaryEntry(String entry, String title) {
         this.entry = entry;
         this.title = title;
-        this.entryDate= new Date();
     }
 
     public String getGeocache() {

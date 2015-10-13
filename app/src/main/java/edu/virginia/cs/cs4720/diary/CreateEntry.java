@@ -1,11 +1,14 @@
 package edu.virginia.cs.cs4720.diary;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Picture;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -64,14 +67,17 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
             PictureFile = entry.getPicture();
             AudioFile = entry.getVoice();
 
-            File imgFile = new  File(PictureFile);
-            if(imgFile.exists()){
-                Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
-                ImageView myImage = (ImageView) findViewById(R.id.imageView);
-                myImage.setImageBitmap(myBitmap);
+            if (PictureFile != null) {
+                File imgFile = new File(PictureFile);
+                if (imgFile.exists()) {
+                    Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+                    ImageView myImage = (ImageView) findViewById(R.id.imageView);
+                    myImage.setImageBitmap(myBitmap);
+                }
             }
 
-            if(AudioFile != null){
+            if(AudioFile != null && !AudioFile.equals("null")){
+                Log.d("audio file", AudioFile);
                 ((Button)(findViewById(R.id.PlayButton))).setVisibility(View.VISIBLE);
             }
 
@@ -110,10 +116,6 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -121,6 +123,19 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
     public void onSave(View v){
         String entryText = ((EditText) (findViewById(R.id.entryText))).getText().toString();
         String titleText = ((EditText) (findViewById(R.id.titleText))).getText().toString();
+        if (entryText.length() == 0  || titleText.length() == 0 ){
+            AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+            alertDialog.setTitle("Title and entry required");
+            alertDialog.setMessage("You must fill in both title and entry if you'd like to save.");
+            alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+            //alertDialog.setIcon(R.drawable.icon);
+            alertDialog.show();
+            return;
+        }
         Intent returnIntent = new Intent();
         if (entry != null){
             entry.setEntry(entryText);
@@ -131,6 +146,7 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
             entry = new DiaryEntry(entryText, titleText);
         }
         //if (lat!=null && longi !=null) {
+            entry.setEntryDate(new Date());
             entry.setGeocache("" + lat + "," + longi);
             entry.setPicture(PictureFile);
             entry.setVoice(AudioFile);
@@ -154,7 +170,7 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
         try{
             List<Address> address = geoCoder.getFromLocation(lat, longi, 1);
             String locality = address.get(0).getLocality();
-            loc.setText("Last saved at: "+locality);
+            loc.setText("Location: "+locality);
         } catch (IOException e){}
         catch (NullPointerException e){}
         catch (IndexOutOfBoundsException e){}
