@@ -17,6 +17,7 @@ import android.location.LocationManager;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.content.ContextCompat;
@@ -31,8 +32,19 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+
+import com.google.gson.Gson;
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
+import com.squareup.okhttp.Call;
+
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Locale;
 import java.text.SimpleDateFormat;
@@ -51,6 +63,11 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
     private MediaPlayer mPlayer = null;
     String AudioFile = null;
     String PictureFile = null;
+
+    public static final MediaType JSON
+            = MediaType.parse("application/json; charset=utf-8");
+
+    OkHttpClient client = new OkHttpClient();
 
 
     @Override
@@ -121,7 +138,7 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
         return super.onOptionsItemSelected(item);
     }
 
-    public void onSave(View v){
+    public void onSave(View v) throws IOException{
         String entryText = ((EditText) (findViewById(R.id.entryText))).getText().toString();
         String titleText = ((EditText) (findViewById(R.id.titleText))).getText().toString();
         if (entryText.length() == 0  || titleText.length() == 0 ){
@@ -146,24 +163,50 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
         else {
             entry = new DiaryEntry(entryText, titleText);
         }
-        //if (lat!=null && longi !=null) {
-            entry.setEntryDate(new Date());
-            entry.setGeocache("" + lat + "," + longi);
-            entry.setPicture(PictureFile);
-            entry.setVoice(AudioFile);
-        //}
+        entry.setEntryDate(new Date());
+        entry.setGeocache("" + lat + "," + longi);
+        entry.setPicture(PictureFile);
+        entry.setVoice(AudioFile);
+
+        Gson gson = new Gson();
+
+        String json = gson.toJson(entry);
+        post("http://192.168.1.6:3000/submitentry" , json, new Callback(){
+            @Override
+            public void onFailure(Request request, IOException i) {
+                Log.d("post failed", i.toString());
+            }
+
+            @Override
+            public void onResponse(Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    String responseStr = response.body().string();
+                    Log.d("response string", responseStr);
+                } else {
+                    Log.d("response failed", "on response");
+                }
+            }
+
+        });
 
         returnIntent.putExtra("entry", entry);
         setResult(RESULT_OK, returnIntent);
         finish();
     }
 
+    Call post(String url, String json, Callback callback) throws IOException {
+        RequestBody body = RequestBody.create(JSON, json);
+        Request request = new Request.Builder()
+                .url(url)
+                .post(body)
+                .build();
+        Call call = client.newCall(request);
+        call.enqueue(callback);
+        return call;
+    }
+
     @Override
     public void onLocationChanged(Location location) {
-        //TextView lat = (TextView) findViewById(R.id.Latitude);
-        //TextView longi = (TextView) findViewById(R.id.Longitude);
-        //lat.setText("Latitude: " + location.getLatitude());
-        //longi.setText("Longitude: " + location.getLongitude());
         TextView loc = (TextView) findViewById(R.id.location);
         lat = location.getLatitude();
         longi = location.getLongitude();
@@ -190,31 +233,11 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
 
     @Override
     public void onProviderDisabled(String provider) {
-        //TextView Lat = (TextView) findViewById(R.id.Latitude);
-        //TextView Long = (TextView) findViewById(R.id.Longitude);
-        //Lat.setText("OFF");
-        //Long.setText("OFF");
         TextView loc = (TextView) findViewById(R.id.location);
         loc.setText("Location is off");
     }
 
     public void takePicture(View v) {
-
-/*        Intent pickIntent = new Intent();
-        pickIntent.setType("image*//*");
-        pickIntent.setAction(Intent.ACTION_GET_CONTENT);
-
-        Intent takePhotoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-
-        String pickTitle = "Select or take a new Picture"; // Or get from strings.xml
-        Intent chooserIntent = Intent.createChooser(pickIntent, pickTitle);
-        chooserIntent.putExtra
-                (
-                        Intent.EXTRA_INITIAL_INTENTS,
-                        new Intent[]{takePhotoIntent}
-                );
-        startActivityForResult(chooserIntent, SELECT_PICTURE);*/
-
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             File photoFile = null;
@@ -239,11 +262,6 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
                 ImageView myImage = (ImageView) findViewById(R.id.imageView);
                 myImage.setImageBitmap(scaled);
             }
-
-                /*Bundle extras = data.getExtras();
-                Bitmap imageBitmap = (Bitmap) extras.get("data");
-                ImageView mImageView = (ImageView) findViewById(R.id.imageView);
-                mImageView.setImageBitmap(imageBitmap);*/
         }
     }
 
