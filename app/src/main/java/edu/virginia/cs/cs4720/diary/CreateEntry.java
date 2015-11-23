@@ -67,8 +67,6 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
     public static final MediaType JSON
             = MediaType.parse("application/json; charset=utf-8");
 
-    OkHttpClient client = new OkHttpClient();
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -171,7 +169,7 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
         Gson gson = new Gson();
 
         String json = gson.toJson(entry);
-        post("http://192.168.1.6:3000/submitentry" , json, new Callback(){
+        post("http://srighal-diary.herokuapp.com/entry/save" , json, new Callback(){
             @Override
             public void onFailure(Request request, IOException i) {
                 Log.d("post failed", i.toString());
@@ -195,6 +193,7 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
     }
 
     Call post(String url, String json, Callback callback) throws IOException {
+        final OkHttpClient client = new OkHttpClient();
         RequestBody body = RequestBody.create(JSON, json);
         Request request = new Request.Builder()
                 .url(url)

@@ -2,6 +2,8 @@ package edu.virginia.cs.cs4720.diary;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.text.DateFormat;
 import java.util.Date;
 
@@ -11,6 +13,7 @@ import java.util.Date;
 public class DiaryEntry implements Parcelable {
 
     private String entry;
+    @SerializedName("entrydate")
     private Date entryDate;
     private String picture;
     private String voice;

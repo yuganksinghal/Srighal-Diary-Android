@@ -1,9 +1,12 @@
 package edu.virginia.cs.cs4720.diary;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -14,13 +17,24 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Spinner;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.squareup.okhttp.Headers;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
+import com.squareup.okhttp.Callback;
+
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -43,6 +57,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     static final String ENTRY_LIST_KEY = "Entry list";
 
     private SharedPreferences mPrefs;
+
 
 
     @Override
@@ -420,4 +435,56 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         ed.putString("sort", currentSort.toString());
         ed.commit();
     }
+
+    public void getEntriesFromWeb(View v) throws Exception{
+
+        final OkHttpClient client = new OkHttpClient();
+
+        Request request = new Request.Builder()
+                .url("http://srighal-diary.herokuapp.com/entry/all")
+                .build();
+
+        client.newCall(request).enqueue(new Callback(){
+            Handler mainHandler = new Handler(MainActivity.this.getMainLooper());
+            @Override public void onFailure(Request request, IOException throwable){
+                throwable.printStackTrace();
+            }
+
+            @Override public void onResponse(Response response) throws IOException{
+                if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+
+                String json = response.body().string();
+
+                Gson gson = new Gson();
+
+                Type collectionType = new TypeToken<Collection<DiaryEntry>>(){}.getType();
+                Collection<DiaryEntry> entries = gson.fromJson(json, collectionType);
+
+                final StringBuilder sb = new StringBuilder();
+
+                for (DiaryEntry e : entries){
+                    sb.append("Title: " +e.getTitle() +"\nDate: "+e.getEntryDate()+"\nEntry: "+e.getEntry()+"\nGeocache: "+e.getGeocache());
+                    sb.append("\n\n");
+                }
+
+                mainHandler.post(new Runnable() {
+                    StringBuilder b = sb;
+                    @Override
+                    public void run() {
+                        AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
+                        alertDialog.setTitle("Entries on Cloud");
+                        alertDialog.setMessage(b.toString());
+                        alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+                        //alertDialog.setIcon(R.drawable.icon);
+                        alertDialog.show();
+                    }
+                });
+            }
+        });
+    }
+
 }
