@@ -22,6 +22,14 @@
         android:layout_alignParentEnd="true"
         android:layout_below="@+id/spinner" />
 
+    <TextView
+        android:id="@+id/empty"
+        android:textSize="45dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:text="No diary entries"/>
+
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -33,3 +41,4 @@
         android:layout_alignParentRight="true"/>
 
 </RelativeLayout>
+

@@ -16,6 +16,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -103,6 +104,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         ListView listView = (ListView)findViewById(R.id.listView);
         adapter = new EntryAdapter(this,  entryList);
+        TextView emptyView = (TextView) findViewById(R.id.empty);
+        listView.setEmptyView(emptyView);
 
         listView.setAdapter(adapter);
 
@@ -460,29 +463,56 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 Type collectionType = new TypeToken<Collection<DiaryEntry>>(){}.getType();
                 Collection<DiaryEntry> entries = gson.fromJson(json, collectionType);
 
-                final StringBuilder sb = new StringBuilder();
-
                 for (DiaryEntry e : entries){
-                    sb.append("Title: " +e.getTitle() +"\nDate: "+e.getEntryDate()+"\nEntry: "+e.getEntry()+"\nGeocache: "+e.getGeocache());
-                    sb.append("\n\n");
+//                    sb.append("Title: " +e.getTitle() +"\nDate: "+e.getEntryDate()+"\nEntry: "+e.getEntry()+"\nGeocache: "+e.getGeocache());
+//                    sb.append("\n\n");
+                    entryList.add(e);
                 }
 
                 mainHandler.post(new Runnable() {
-                    StringBuilder b = sb;
                     @Override
                     public void run() {
-                        AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
-                        alertDialog.setTitle("Entries on Cloud");
-                        alertDialog.setMessage(b.toString());
-                        alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        });
-                        //alertDialog.setIcon(R.drawable.icon);
-                        alertDialog.show();
+                        switch (currentSort){
+                            case NEWEST_FIRST:
+                                sortNewestFirst();
+                                break;
+                            case OLDEST_FIRST:
+                                sortOldestFirst();
+                                break;
+                            case TITLE_ASCENDING:
+                                sortTitleAscending();
+                                break;
+                            case TITLE_DESCENDING:
+                                sortTitleDescending();
+                                break;
+                        }
                     }
                 });
+
+                String FILENAME = "Diary_Entries";
+                String Entries = "";
+                FileOutputStream fos = null;
+                try {
+                    fos = openFileOutput(FILENAME, Context.MODE_PRIVATE);
+                } catch (FileNotFoundException e) {
+                    Log.d("ERROR", "ISSUE SAVING FILE TO MEMORY");
+                }
+                for(DiaryEntry a: entryList){
+                    Entries=Entries + a.getTitle() + "`" + a.getEntry() + "`" + a.getGeocache() + "`" + a.getPicture() + "`" + a.getVoice()+"`"+a.getEntryDate().getTime();
+                    Entries += "~";
+                    Log.d("INFO", "WRITING");
+                    Log.d("ENTRY", Entries);
+                }
+                try {
+                    fos.write(Entries.getBytes());
+                } catch (IOException e) {
+                    Log.d("ERROR", "ISSUE WRITING");
+                }
+                try {
+                    fos.close();
+                } catch (IOException e) {
+                    Log.d("ERROR", "ISSUE CLOSING FILE");
+                }
             }
         });
     }
