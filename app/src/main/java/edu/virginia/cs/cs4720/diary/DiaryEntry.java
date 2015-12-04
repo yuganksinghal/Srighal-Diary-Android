@@ -1,11 +1,13 @@
 package edu.virginia.cs.cs4720.diary;
 import android.os.Parcel;
+import android.os.ParcelUuid;
 import android.os.Parcelable;
 
 import com.google.gson.annotations.SerializedName;
 
 import java.text.DateFormat;
 import java.util.Date;
+import java.util.UUID;
 
 /**
  * Created by Yugank Singhal on 9/13/2015.
@@ -19,10 +21,18 @@ public class DiaryEntry implements Parcelable {
     private String voice;
     private String geocache;
     private String title;
+    private String id;
 
     public DiaryEntry(String entry, String title) {
         this.entry = entry;
         this.title = title;
+        this.id = UUID.randomUUID().toString();
+    }
+
+    public DiaryEntry(String entry, String title, String id){
+        this.entry = entry;
+        this.title = title;
+        this.id = id;
     }
 
     public String getGeocache() {
@@ -73,6 +83,10 @@ public class DiaryEntry implements Parcelable {
         this.title = title;
     }
 
+    public String getId(){
+        return id;
+    }
+
     public String toString(){
         return title + " ("+ DateFormat.getDateInstance().format(entryDate)+")";
     }
@@ -85,6 +99,7 @@ public class DiaryEntry implements Parcelable {
         voice = in.readString();
         geocache = in.readString();
         title = in.readString();
+        id = in.readString();
     }
 
     @Override
@@ -100,6 +115,7 @@ public class DiaryEntry implements Parcelable {
         dest.writeString(voice);
         dest.writeString(geocache);
         dest.writeString(title);
+        dest.writeString(id);
     }
 
     @SuppressWarnings("unused")

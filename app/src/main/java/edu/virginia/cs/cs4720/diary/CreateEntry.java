@@ -75,6 +75,7 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
 
         Bundle b = this.getIntent().getExtras();
         if (b != null){
+            setTitle("Edit Entry");
             entry = b.getParcelable("existing_entry");
             ((EditText) (findViewById(R.id.entryText))).setText(entry.getEntry());
             ((EditText) (findViewById(R.id.titleText))).setText(entry.getTitle());
@@ -153,9 +154,11 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
             return;
         }
         Intent returnIntent = new Intent();
+        boolean editing = false;
         if (entry != null){
             entry.setEntry(entryText);
             entry.setTitle(titleText);
+            editing = true;
             returnIntent.putExtra("position", pos);
         }
         else {
@@ -169,7 +172,14 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
         Gson gson = new Gson();
 
         String json = gson.toJson(entry);
-        post("http://srighal-diary.herokuapp.com/entry/save" , json, new Callback(){
+        String url;
+        if (editing){
+            url = "http://srighal-diary.herokuapp.com/entry/" + entry.getId()+"/save";
+        }
+        else{
+            url = "http://srighal-diary.herokuapp.com/entry/new";
+        }
+        post(url , json, new Callback(){
             @Override
             public void onFailure(Request request, IOException i) {
                 Log.d("post failed", i.toString());
@@ -216,7 +226,8 @@ public class CreateEntry extends AppCompatActivity implements LocationListener {
             loc.setText("Location: "+locality);
         } catch (IOException e){}
         catch (NullPointerException e){}
-        catch (IndexOutOfBoundsException e){}
+        catch (IndexOutOfBoundsException e) {
+        }
         Log.d("LOCATION", "" + location.getLongitude());
     }
 

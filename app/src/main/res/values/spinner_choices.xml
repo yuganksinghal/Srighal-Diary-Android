@@ -3,7 +3,7 @@
     <string-array name="sort_type_array">
         <item>Oldest first</item>
         <item>Newest first</item>
-        <item>Alphabetical by Title (ascending)</item>
-        <item>Alphabetical by Title (descending)</item>
+        <item>Title ↑</item>
+        <item>Title ↓</item>
     </string-array>
 </resources>

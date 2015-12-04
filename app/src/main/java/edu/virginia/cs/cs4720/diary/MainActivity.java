@@ -1,12 +1,14 @@
 package edu.virginia.cs.cs4720.diary;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.ParcelUuid;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -23,6 +25,7 @@ import com.google.gson.reflect.TypeToken;
 import com.squareup.okhttp.Headers;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.Callback;
 
@@ -39,6 +42,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Iterator;
 
 import edu.virginia.cs.cs4720.diary.myapplication.R;
 
@@ -57,7 +61,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     static final String ENTRY_LIST_KEY = "Entry list";
 
+    static final String FIELD_DELIM = "\u001f";
+    static final String ENTRY_DELIM = "\u001e";
+
     private SharedPreferences mPrefs;
+
+    Spinner spinner;
 
 
 
@@ -92,15 +101,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         setContentView(R.layout.activity_main);
 
-        Spinner spinner = (Spinner) findViewById(R.id.spinner);
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(this,
-                R.array.sort_type_array, android.R.layout.simple_spinner_item);
-        // Specify the layout to use when the list of choices appears
-        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        // Apply the adapter to the spinner
-        spinner.setAdapter(spinnerAdapter);
-        spinner.setOnItemSelectedListener(this);
+
 
         ListView listView = (ListView)findViewById(R.id.listView);
         adapter = new EntryAdapter(this,  entryList);
@@ -122,6 +123,49 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 startActivityForResult(intent, EDIT_ENTRY);
             }
         });
+
+        listView.setLongClickable(true);
+
+        listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                final DiaryEntry entry = (DiaryEntry) parent.getItemAtPosition(position);
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle("Delete Entry")
+                        .setMessage("Do you want to delete the entry titled " + "\"" + entry.getTitle() + "\"?")
+                        .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int whichButton){
+
+                                //delete post request here.
+                                final OkHttpClient client = new OkHttpClient();
+                                RequestBody emptyBody = RequestBody.create(null, new byte[0]);
+                                Request request = new Request.Builder()
+                                        .url("http://srighal-diary.herokuapp.com/entry/"+entry.getId()+"/delete")
+                                        .post(emptyBody)
+                                        .build();
+
+                                client.newCall(request).enqueue(new Callback() {
+
+                                    @Override
+                                    public void onFailure(Request request, IOException throwable) {
+                                        throwable.printStackTrace();
+                                    }
+
+                                    @Override
+                                    public void onResponse(Response response) throws IOException {
+                                        if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+                                    }
+                                });
+
+                                entryList.remove(entry);
+                                adapter.notifyDataSetChanged();
+                                writeToFile();
+                            }
+                        })
+                        .setNegativeButton("Cancel", null).show();
+                return true;
+            }
+        });
         if(entryList.isEmpty()) {
             String FILENAME = "Diary_Entries";
             FileInputStream fis = null;
@@ -136,15 +180,15 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
                 Log.d("BUFFER", buffer);
 
-                String[] Entries = buffer.split("~");
+                String[] Entries = buffer.split(ENTRY_DELIM);
                 Log.d("LENGTH", "" + Entries.length);
                 for (int i = 0; i < Entries.length; i++){
                     Log.d("ENTRY", Entries[i]);
                     if(Entries[i].isEmpty()){
                         continue;
                     }
-                    String[] parts = Entries[i].split("`");
-                    DiaryEntry d = new DiaryEntry(parts[1], parts[0]);
+                    String[] parts = Entries[i].split(FIELD_DELIM);
+                    DiaryEntry d = new DiaryEntry(parts[1], parts[0], parts[6]);
                     if ((parts[2].length()>0) && parts[2] != null){
                         d.setGeocache(parts[2]);
                     }
@@ -204,6 +248,20 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
 
+       spinner = (Spinner)menu.findItem(R.id.menuSort).getActionView();
+
+       // spinner = (Spinner)v.findViewById(R.id.spinner); //(Spinner) findViewById(R.id.spinner);
+
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(this,
+                R.array.sort_type_array, R.layout.spinner_item);
+        // Specify the layout to use when the list of choices appears
+        //spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the adapter to the spinner
+        spinner.setAdapter(spinnerAdapter);
+        spinner.setOnItemSelectedListener(this);
+
+
 //        mSpinnerItem1 = menu.findItem( R.id.spinner);
 //        View view1 = mSpinnerItem1.getActionView();
 //        if (view1 instanceof Spinner)
@@ -250,6 +308,15 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             createNewEntry();
         }
 
+        if (id == R.id.restore_from_web){
+            try {
+                getEntriesFromWeb();
+            }
+            catch(Exception e){
+                e.printStackTrace();
+            }
+        }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -280,30 +347,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 }
                 //adapter.notifyDataSetChanged();
 
-                String FILENAME = "Diary_Entries";
-                String Entries = "";
-                FileOutputStream fos = null;
-                try {
-                    fos = openFileOutput(FILENAME, Context.MODE_PRIVATE);
-                } catch (FileNotFoundException e) {
-                    Log.d("ERROR", "ISSUE SAVING FILE TO MEMORY");
-                }
-                for(DiaryEntry a: entryList){
-                    Entries=Entries + a.getTitle() + "`" + a.getEntry() + "`" + a.getGeocache() + "`" + a.getPicture() + "`" + a.getVoice()+"`"+a.getEntryDate().getTime();
-                    Entries += "~";
-                    Log.d("INFO", "WRITING");
-                    Log.d("ENTRY", Entries);
-                }
-                try {
-                    fos.write(Entries.getBytes());
-                } catch (IOException e) {
-                    Log.d("ERROR", "ISSUE WRITING");
-                }
-                try {
-                    fos.close();
-                } catch (IOException e) {
-                    Log.d("ERROR", "ISSUE CLOSING FILE");
-                }
+                writeToFile();
 
             }
         }
@@ -331,29 +375,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
                 //adapter.notifyDataSetChanged();
 
-                String FILENAME = "Diary_Entries";
-                String Entries = "";
-                FileOutputStream fos = null;
-                try {
-                    fos = openFileOutput(FILENAME, Context.MODE_PRIVATE);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-                for(DiaryEntry a: entryList){
-                    Entries=Entries + a.getTitle() + "`" + a.getEntry() + "`" + a.getGeocache() + "`" + a.getPicture() + "`" + a.getVoice()+"`"+a.getEntryDate().getTime();
-                    Entries += "~";
-                }
-                try {
-                    fos.write(Entries.getBytes());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                try {
-                    fos.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                writeToFile();
             }
         }
     }
@@ -378,10 +400,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             case "Newest first":
                 sortNewestFirst();
                 break;
-            case "Alphabetical by Title (ascending)":
+            case "Title ↑":
                 sortTitleAscending();
                 break;
-            case "Alphabetical by Title (descending)":
+            case "Title ↓":
                 sortTitleDescending();
                 break;
         }
@@ -415,7 +437,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private void sortTitleAscending(){
         currentSort = Sort.TITLE_ASCENDING;
         Collections.sort(entryList, new Comparator<DiaryEntry>() {
-            public int compare (DiaryEntry d1, DiaryEntry d2){
+            public int compare(DiaryEntry d1, DiaryEntry d2) {
                 return d1.getTitle().compareTo(d2.getTitle());
             }
         });
@@ -425,7 +447,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private void sortTitleDescending(){
         currentSort = Sort.TITLE_DESCENDING;
         Collections.sort(entryList, new Comparator<DiaryEntry>() {
-            public int compare (DiaryEntry d1, DiaryEntry d2){
+            public int compare(DiaryEntry d1, DiaryEntry d2) {
                 return d2.getTitle().compareTo(d1.getTitle());
             }
         });
@@ -439,7 +461,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         ed.commit();
     }
 
-    public void getEntriesFromWeb(View v) throws Exception{
+    public void getEntriesFromWeb() throws Exception{
 
         final OkHttpClient client = new OkHttpClient();
 
@@ -447,32 +469,61 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 .url("http://srighal-diary.herokuapp.com/entry/all")
                 .build();
 
-        client.newCall(request).enqueue(new Callback(){
+        client.newCall(request).enqueue(new Callback() {
             Handler mainHandler = new Handler(MainActivity.this.getMainLooper());
-            @Override public void onFailure(Request request, IOException throwable){
+
+            @Override
+            public void onFailure(Request request, IOException throwable) {
                 throwable.printStackTrace();
             }
 
-            @Override public void onResponse(Response response) throws IOException{
+            @Override
+            public void onResponse(Response response) throws IOException {
                 if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
 
                 String json = response.body().string();
 
                 Gson gson = new Gson();
 
-                Type collectionType = new TypeToken<Collection<DiaryEntry>>(){}.getType();
+                Type collectionType = new TypeToken<Collection<DiaryEntry>>() {
+                }.getType();
                 Collection<DiaryEntry> entries = gson.fromJson(json, collectionType);
+                Iterator<DiaryEntry> i = entryList.iterator();
 
-                for (DiaryEntry e : entries){
-//                    sb.append("Title: " +e.getTitle() +"\nDate: "+e.getEntryDate()+"\nEntry: "+e.getEntry()+"\nGeocache: "+e.getGeocache());
-//                    sb.append("\n\n");
-                    entryList.add(e);
+                while (i.hasNext()){
+                   DiaryEntry local = i.next();
+                   boolean found = false;
+                    for (DiaryEntry e : entries){
+                        if (e.getId().equals(local.getId())){
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found){
+                        i.remove();
+                    }
+                }
+
+                for (DiaryEntry e : entries) {
+                    boolean found = false;
+                    for (DiaryEntry local : entryList){
+                        if (e.getId().equals(local.getId())){
+                            local.setEntry(e.getEntry());
+                            local.setEntryDate(e.getEntryDate());
+                            local.setGeocache((e.getGeocache()));
+                            local.setTitle(e.getTitle());
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                        entryList.add(e);
                 }
 
                 mainHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        switch (currentSort){
+                        switch (currentSort) {
                             case NEWEST_FIRST:
                                 sortNewestFirst();
                                 break;
@@ -489,32 +540,36 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     }
                 });
 
-                String FILENAME = "Diary_Entries";
-                String Entries = "";
-                FileOutputStream fos = null;
-                try {
-                    fos = openFileOutput(FILENAME, Context.MODE_PRIVATE);
-                } catch (FileNotFoundException e) {
-                    Log.d("ERROR", "ISSUE SAVING FILE TO MEMORY");
-                }
-                for(DiaryEntry a: entryList){
-                    Entries=Entries + a.getTitle() + "`" + a.getEntry() + "`" + a.getGeocache() + "`" + a.getPicture() + "`" + a.getVoice()+"`"+a.getEntryDate().getTime();
-                    Entries += "~";
-                    Log.d("INFO", "WRITING");
-                    Log.d("ENTRY", Entries);
-                }
-                try {
-                    fos.write(Entries.getBytes());
-                } catch (IOException e) {
-                    Log.d("ERROR", "ISSUE WRITING");
-                }
-                try {
-                    fos.close();
-                } catch (IOException e) {
-                    Log.d("ERROR", "ISSUE CLOSING FILE");
-                }
+                writeToFile();
             }
         });
+    }
+
+    private void writeToFile(){
+        String FILENAME = "Diary_Entries";
+        String Entries = "";
+        FileOutputStream fos = null;
+        try {
+            fos = openFileOutput(FILENAME, Context.MODE_PRIVATE);
+        } catch (FileNotFoundException e) {
+            Log.d("ERROR", "ISSUE SAVING FILE TO MEMORY");
+        }
+        for(DiaryEntry a: entryList){
+            Entries=Entries + a.getTitle() + FIELD_DELIM + a.getEntry() + FIELD_DELIM + a.getGeocache() + FIELD_DELIM + a.getPicture() + FIELD_DELIM + a.getVoice()+FIELD_DELIM+a.getEntryDate().getTime()+FIELD_DELIM+a.getId();
+            Entries += ENTRY_DELIM;
+            Log.d("INFO", "WRITING");
+            Log.d("ENTRY", Entries);
+        }
+        try {
+            fos.write(Entries.getBytes());
+        } catch (IOException e) {
+            Log.d("ERROR", "ISSUE WRITING");
+        }
+        try {
+            fos.close();
+        } catch (IOException e) {
+            Log.d("ERROR", "ISSUE CLOSING FILE");
+        }
     }
 
 }
